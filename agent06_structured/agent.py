@@ -12,15 +12,16 @@ os.environ["OPENAI_API_KEY"] = "lm-studio"
 
 # The output contract. ADK sends this schema to the model and the reply must be
 # JSON matching it, so other code can use the result without parsing prose.
-class AlertTriage(BaseModel):
-    service: str = Field(description="Affected service, e.g. 'payments-api'. 'unknown' if not stated.")
-    severity: Literal["low", "medium", "high", "critical"] = Field(
-        description="critical = customer-facing outage; high = major degradation; "
-        "medium = partial or internal impact; low = cosmetic or no impact."
+class ReviewAnalysis(BaseModel):
+    product: str = Field(description="The product the review is about, e.g. 'headphones'. 'unknown' if not stated.")
+    sentiment: Literal["positive", "neutral", "negative", "mixed"] = Field(
+        description="mixed = clearly both good and bad points; neutral = no strong feeling either way."
     )
-    category: Literal["database", "network", "capacity", "deployment", "security", "other"]
-    summary: str = Field(description="One sentence describing the problem.")
-    needs_human: bool = Field(description="True if someone should be paged now.")
+    topic: Literal["quality", "price", "delivery", "customer_service", "other"] = Field(
+        description="The main thing the review talks about."
+    )
+    summary: str = Field(description="One sentence summarising the review.")
+    needs_reply: bool = Field(description="True if the customer is unhappy or asks a question.")
 
 
 root_agent = Agent(
@@ -30,15 +31,16 @@ root_agent = Agent(
         api_key="lm-studio",
     ),
     name="root_agent",
-    description="Turns a free-text alert into a structured triage record.",
+    description="Turns a free-text customer review into a structured record.",
     instruction=(
-        "You receive a raw alert or incident description. Classify it into the "
-        "required JSON fields. Use only what the alert says; if the service is not "
-        "mentioned, set service to 'unknown'. Do not add fields or commentary."
+        "You receive a customer review. Fill in the required JSON fields. Use only what "
+        "the review says; if the product is not mentioned, set product to 'unknown'. "
+        "Do not add fields or commentary."
     ),
-    # With output_schema ADK disables tools and transfers for this agent,
-    # so it can only produce the structured answer.
-    output_schema=AlertTriage,
-    # Also store the result in session state under this key (see CASES.md case 4).
-    output_key="triage",
+    # The final reply must match ReviewAnalysis. This agent has no tools, but ADK
+    # allows tools together with output_schema: tools run first, and only the
+    # final answer is forced into the schema.
+    output_schema=ReviewAnalysis,
+    # Also store the result in session state under this key (see CASES.md case 5).
+    output_key="review",
 )

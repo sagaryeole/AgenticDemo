@@ -1,6 +1,6 @@
 """Global model switch for the demo agents (agent07 onwards).
 
-Set MODEL_PROVIDER in aiops-poc/.env to choose for every agent that uses
+Set MODEL_PROVIDER in the project root .env to choose for every agent that uses
 get_model(). Set <AGENT_NAME>_MODEL_PROVIDER to override a single agent.
 """
 import os

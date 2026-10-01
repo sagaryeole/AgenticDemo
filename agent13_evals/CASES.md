@@ -11,13 +11,14 @@ Files:
 - `weak_config.json`: the same, but with a word-overlap score instead of the judge. Used in case 5 to show a blind spot.
 
 ## Run it
-From `aiops-poc/`:
+From the project root:
 
-    PYTHONPATH=. uv run adk eval agent13_evals agent13_evals/bookshop.evalset.json \
+    uv run adk eval agent13_evals agent13_evals/bookshop.evalset.json \
         --config_file_path agent13_evals/test_config.json
 
-- `PYTHONPATH=.` is needed because `adk eval` (unlike `adk run`) does not put the project folder on the
-  import path, and the agent imports `common.models`.
+- `adk eval` (unlike `adk run`) does not put the project folder on the import path. The shared `common`
+  package is installed into the venv by `uv sync` (see `pyproject.toml`), so the agent's
+  `from common.models import ...` still works.
 - Add `--print_detailed_results` for scores per case. Prefix with `MODEL_PROVIDER=local` or `gemini` to pick the model.
 - Run one case: `agent13_evals/bookshop.evalset.json:book_details`.
 - The judge metric calls Gemini even when the agent runs on the local model, so the Google settings must be set.

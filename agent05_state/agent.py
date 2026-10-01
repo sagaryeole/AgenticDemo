@@ -15,7 +15,7 @@ def save_note(note: str, tool_context: ToolContext) -> dict:
     """Saves a note so it can be recalled later in this conversation.
 
     Args:
-        note: The text to remember, e.g. "payments-api deploy is at 14:00".
+        note: The text to remember, e.g. "dentist appointment on Friday at 14:00".
     """
     notes = list(tool_context.state.get("notes", []))
     notes.append(note)

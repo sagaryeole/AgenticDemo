@@ -21,7 +21,7 @@ between messages in the same session.
 ```
 
 ## Case 1: one tool call
-> Remember that the payments-api deploy is at 14:00.
+> Remember that my dentist appointment is on Friday at 14:00.
 
 Expect: `save_note` is called, the agent confirms.
 Learn: the model picks a tool and fills its argument from your sentence.
@@ -29,11 +29,11 @@ Learn: the model picks a tool and fills its argument from your sentence.
 ## Case 2: state survives a turn
 > What did I ask you to remember?
 
-Expect: `list_notes` is called, the answer says "payments-api deploy at 14:00".
+Expect: `list_notes` is called, the answer mentions the dentist appointment on Friday at 14:00.
 Learn: the answer comes from session state, not from the model's memory.
 
 ## Case 3: state accumulates
-> Also note that orders-api has a disk alert.
+> Also note that I need to buy milk.
 > List everything you have noted.
 
 Expect: both notes returned, `total_notes` goes to 2.

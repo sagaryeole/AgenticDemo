@@ -32,7 +32,7 @@ Choose the provider for all of them with an environment variable:
     MODEL_PROVIDER=local  uv run adk run agent07_multiagent    # LM Studio
     MODEL_PROVIDER=gemini uv run adk run agent07_multiagent    # Gemini
 
-You can also put `MODEL_PROVIDER=local` in `aiops-poc/.env` (the factory loads it).
+You can also put `MODEL_PROVIDER=local` in the project root `.env` (the factory loads it).
 Override a single agent: `AGENT07_MODEL_PROVIDER=gemini` beats `MODEL_PROVIDER`.
 Other settings: `LOCAL_MODEL_ID`, `LOCAL_API_BASE`, `GEMINI_MODEL`.
 Gemini needs the GOOGLE_* variables in `agent07_multiagent/.env`; local needs LM Studio running.

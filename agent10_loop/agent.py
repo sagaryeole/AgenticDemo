@@ -1,39 +1,54 @@
-from google.adk.agents import Agent, LoopAgent
-from google.adk.tools import ToolContext
+from typing import AsyncGenerator
+
+from google.adk.agents import Agent, BaseAgent, LoopAgent
+from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events import Event, EventActions
+from google.genai import types
 from common.models import get_model  # global model switch, see common/models.py
 
 MODEL_KEY = "agent10"  # lets AGENT10_MODEL_PROVIDER override the global choice
 MAX_WORDS = 6
 
 
-def check_slogan(slogan: str, names_the_product: bool, tool_context: ToolContext) -> dict:
-    """Checks a slogan against all the rules and ends the revision loop if they all pass.
+# A plain-Python agent. It has no model: it just checks the rules in code. A workflow step does not
+# have to be an LLM. Rules that code can check (word count, a required word) should be checked by
+# code, because models miscount, judge leniently, and sometimes skip a tool call.
+class SloganChecker(BaseAgent):
+    async def _run_async_impl(self, ctx: InvocationContext) -> AsyncGenerator[Event, None]:
+        slogan = ctx.session.state.get("draft", "")
 
-    Args:
-        slogan: The slogan text to check.
-        names_the_product: Your yes/no judgement: does the slogan name the product or idea?
-    """
-    # Rules 1 and 3 are checked in code. Models miscount words, code does not.
-    words = len(slogan.split())
-    has_exclamation = "!" in slogan
-    problems = []
-    if words > MAX_WORDS:
-        problems.append(f"too long: {words} words, the limit is {MAX_WORDS}")
-    if has_exclamation:
-        problems.append("contains an exclamation mark")
-    # Rule 2 needs judgement, so it comes from the model as an argument.
-    if not names_the_product:
-        problems.append("does not name the product or idea")
+        # The product is whatever the user typed in their first message.
+        product = ""
+        for event in ctx.session.events:
+            if event.author == "user" and event.content and event.content.parts:
+                product = " ".join(p.text for p in event.content.parts if p.text)
+                break
 
-    if not problems:
-        # escalate=True tells the LoopAgent to stop after this step.
-        tool_context.actions.escalate = True
-        return {"approved": True, "word_count": words}
-    return {"approved": False, "word_count": words, "problems": problems}
+        words = len(slogan.split())
+        # Rule 2: contain at least one meaningful word (4+ letters) of the product.
+        product_words = [w for w in product.lower().replace("-", " ").split() if len(w) >= 4]
+        problems = []
+        if words > MAX_WORDS:
+            problems.append(f"too long: {words} words, the limit is {MAX_WORDS}")
+        if "!" in slogan:
+            problems.append("contains an exclamation mark")
+        if not any(w in slogan.lower() for w in product_words):
+            problems.append(f"does not contain any of these words: {', '.join(product_words)}")
+
+        approved = not problems
+        feedback = "Approved" if approved else "Rejected: " + "; ".join(problems)
+
+        yield Event(
+            author=self.name,
+            content=types.Content(role="model", parts=[types.Part(text=f"Approved ({words} words)" if approved else feedback)]),
+            # escalate=True tells the LoopAgent to stop after this step.
+            # state_delta saves the feedback so the writer can read it next round.
+            actions=EventActions(escalate=approved, state_delta={"feedback": feedback}),
+        )
 
 
 # {feedback?} with a question mark means "use it if it exists". On the first
-# round the critic has not run yet, so the key is missing and ADK uses an empty value.
+# round the checker has not run yet, so the key is missing and ADK uses an empty value.
 writer = Agent(
     name="writer",
     model=get_model(MODEL_KEY),
@@ -46,27 +61,16 @@ writer = Agent(
     output_key="draft",
 )
 
-critic = Agent(
-    name="critic",
-    model=get_model(MODEL_KEY),
-    description="Checks the slogan against the rules and gives feedback if it fails.",
-    instruction=(
-        "Check this slogan:\n{draft}\n\n"
-        "Call check_slogan exactly once with the slogan. For names_the_product, answer true only if "
-        "the slogan contains the product or idea the user named (or an obvious part of it).\n"
-        "- If the tool says approved is true, reply with the single word: Approved.\n"
-        "- Otherwise reply with one short sentence listing the problems the tool returned. "
-        "Never count words yourself."
-    ),
-    tools=[check_slogan],
-    output_key="feedback",
+checker = SloganChecker(
+    name="checker",
+    description="Checks the slogan against the rules in code and gives feedback if it fails.",
 )
 
-# Runs writer, then critic, then writer again... until check_slogan approves
-# (it sets escalate) or max_iterations is reached, whichever comes first.
+# Runs writer, then checker, then writer again... until the checker escalates
+# or max_iterations is reached, whichever comes first.
 root_agent = LoopAgent(
     name="slogan_loop",
     description="Drafts a slogan and revises it until it meets the rules.",
-    sub_agents=[writer, critic],
+    sub_agents=[writer, checker],
     max_iterations=4,
 )
