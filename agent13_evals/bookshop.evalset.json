@@ -1,0 +1,79 @@
+{
+  "eval_set_id": "bookshop_basics",
+  "name": "Bookshop basics",
+  "description": "Five small checks: which tool is called with which arguments, and what the answer says.",
+  "eval_cases": [
+    {
+      "eval_id": "author_search",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "Which books by Tolkien do you have?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "We have The Hobbit, which is available, and The Fellowship of the Ring, which is not available, both by J.R.R. Tolkien."}]},
+          "intermediate_data": {"tool_uses": [{"name": "find_books_by_author", "args": {"author": "Tolkien"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "book_details",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "Tell me about book B003."}]},
+          "final_response": {"role": "model", "parts": [{"text": "Book B003 is Dune by Frank Herbert, published in 1965. It is available."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_book", "args": {"book_id": "B003"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "unavailable_book",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "Is book B005 available?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "No, book B005, Foundation by Isaac Asimov, is not available."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_book", "args": {"book_id": "B005"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "not_in_catalogue",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "Do you have anything by Stephen King?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "No, there are no books by Stephen King in the catalogue."}]},
+          "intermediate_data": {"tool_uses": [{"name": "find_books_by_author", "args": {"author": "Stephen King"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "list_with_availability",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "List all the books you have, and which are available."}]},
+          "final_response": {"role": "model", "parts": [{"text": "The Hobbit is available. The Fellowship of the Ring is not available. Dune is available. Neuromancer is available. Foundation is not available."}]},
+          "intermediate_data": {"tool_uses": [{"name": "list_books", "args": {}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "no_tool_needed",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "What is a library?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "A library is a place that keeps books and other materials that people can read or borrow."}]},
+          "intermediate_data": {"tool_uses": [], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent13_evals", "user_id": "student", "state": {}}
+    }
+  ]
+}
