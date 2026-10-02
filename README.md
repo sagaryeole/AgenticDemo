@@ -1,7 +1,8 @@
 # Agentic AI with Google ADK, step by step
 
 A hands-on tutorial. Each `agentNN_*` folder adds exactly one new idea to the one before it, and has a
-`CASES.md` with a diagram of how it executes plus small cases to try, easiest first.
+`CASES.md` with a diagram of how it executes plus small cases to try, easiest first. The last one, agent50,
+is a capstone that combines the main ideas in one agent.
 [questions.md](questions.md) is the study guide: 12 topic modules with diagrams, charts of the measured results, the main lessons,
 and 100 questions (with hidden answers) to check your understanding.
 
@@ -64,7 +65,8 @@ Notes on this table:
 - "switchable" means the model comes from `MODEL_PROVIDER` (see Setup). "embeddings" means it uses `EMBEDDING_PROVIDER` instead.
 - Agents 16-19, 35, 36, 39 and 49 are **labs**: plain Python scripts you run with `uv run python agentNN_.../script.py`, not agents you chat with.
   Their `CASES.md` says exactly what to run. (Labs 35, 36, 39 and 49 call a model directly through `common/llm.py`.)
-- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34, 37, 38, 43-48, 50); their `CASES.md` says how to run them.
+- Several agents have extra files next to `agent.py`: tests and demos (21, 24, 26, 28, 30, 31, 33, 34, 37, 38, 43, 45-48, 50),
+  small servers (12, 27, 32, 41) and HTTP clients (44, 50). Their `CASES.md` says how to run them.
   Agents 27, 32, 41, 44 and 50 (its HTTP client) need two terminals: one for a server, one for the agent or client.
 - Agents 16-20, 35, 36 and 50 share `data/handbook.md` and the code in `common/rag.py` and `common/embeddings.py`.
 
@@ -92,7 +94,7 @@ Notes on this table:
 5. For a local model (agents 03-06, and 07+ with `MODEL_PROVIDER=local`): install
    [LM Studio](https://lmstudio.ai/), load a model, and start the server in the Developer tab.
    Set `LOCAL_MODEL_ID` in `.env` to the id shown by `curl http://127.0.0.1:1234/v1/models`.
-6. For the RAG labs, agent 20, agents 35-38 and agent 49, embeddings come from `EMBEDDING_PROVIDER`: `gemini` (default, uses the Google setup above) or
+6. For the RAG labs, agent 20, agents 35-38, 49 and 50, embeddings come from `EMBEDDING_PROVIDER`: `gemini` (default, uses the Google setup above) or
    `local` (an embedding model loaded in LM Studio, `text-embedding-embeddinggemma-300m` by default). These variables are optional
    and not in `.env.example`: `EMBEDDING_PROVIDER`, `GEMINI_EMBEDDING_MODEL`, `LOCAL_EMBEDDING_MODEL`.
 

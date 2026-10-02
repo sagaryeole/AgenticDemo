@@ -1688,6 +1688,8 @@ cancel_tool = FunctionTool(cancel_reservation, require_confirmation=True)
 | Streaming | `RunConfig(streaming_mode=StreamingMode.SSE)` | 43 |
 | A graph of steps | `Workflow(name=..., edges=[...])`, `@node(retry_config=RetryConfig(...))` | 46 |
 | Serve over HTTP | `adk api_server --session_service_uri ...` | 44 |
+| Tell the agent who is logged in | session state at login: `adk run --state '{"role": "student"}'`, or `state=` when creating a session | 48, 50 |
+| Ask a person only when needed | `FunctionTool(func, require_confirmation=a_function)` | 15, 50 |
 | Evals | `adk eval <agent> <file>.evalset.json --config_file_path ...` | 13, 20, 25 |
 
 ---
