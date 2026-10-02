@@ -11,7 +11,6 @@ import asyncio
 import re
 import sys
 
-import pandas as pd
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 

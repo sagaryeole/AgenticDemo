@@ -3,11 +3,9 @@
 Run:   TOOL_MODE=all    uv run python agent38_many_tools/tool_choice_test.py
        TOOL_MODE=vague  uv run python agent38_many_tools/tool_choice_test.py
        TOOL_MODE=routed uv run python agent38_many_tools/tool_choice_test.py
-Add MODEL_PROVIDER=local in front for the local model. `--show` prints every wrong choice.
+Add MODEL_PROVIDER=local in front for the local model. Every wrong choice is printed under the summary line.
 """
 import asyncio
-import os
-import sys
 
 from google.adk.runners import InMemoryRunner
 from google.genai import types

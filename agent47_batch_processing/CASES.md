@@ -3,7 +3,7 @@
 Concept: batch processing. So far an agent answered one person in a chat. Often the job is the opposite: the same small task for 50, 500 or 5,000 items, with nobody waiting at a keyboard. Then four things matter that a chat does not need:
 CONCURRENCY (several items at once, because most of the time is spent waiting for the model), RETRIES (some calls fail), RESULTS WRITTEN AS YOU GO (so a crash loses almost nothing), and RESUME (a restart skips what is already done).
 Topic: labelling 36 made-up product reviews of school supplies as positive, negative or neutral (`reviews.py`, each with the right label, so accuracy can be checked).
-Files: `agent.py` is the worker (one small agent with a fixed output shape, agent06: a `Literal` label); `batch.py` runs it over all reviews. It is a script, not a chat, so there is no `adk run`.
+Files: `agent.py` is the worker (one small agent with a fixed output shape, agent06: a `Literal` label); `batch.py` runs it over all reviews. You can try the worker alone with `uv run adk run agent47_batch_processing` (type a review, get `{"label": "negative"}`), but the lesson is in `batch.py`.
 Run: `uv run python agent47_batch_processing/batch.py --concurrency 1,4,8` (add `MODEL_PROVIDER=local` for the local model). Results go to `agent47_batch_processing/results.csv` (ignored by git), one line per review, written the moment each is done.
 Model: set `MODEL_PROVIDER` in the root `.env`, or `AGENT47_MODEL_PROVIDER` for this agent only.
 

@@ -1,0 +1,152 @@
+{
+  "eval_set_id": "library_capstone",
+  "name": "Library capstone",
+  "description": "Handbook answers, a refusal when the handbook has no answer, and a guest who may not book.",
+  "eval_cases": [
+    {
+      "eval_id": "late_fee",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "How much is the late fee for a book?"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "Late books cost 25 cents per day, up to a maximum of 5 dollars per book. [Late fees and lost items]"
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "agent50_capstone",
+        "user_id": "student",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "study_room_food",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Can I eat in the study room?"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "No, food is not allowed in the study rooms, but water in a closed bottle is fine. [Study rooms]"
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "agent50_capstone",
+        "user_id": "student",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "coding_club_form",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Which form do I need to register for the Coding Club?"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "You need to register for the Coding Club through form LB-204. [Events and children's programs]"
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "agent50_capstone",
+        "user_id": "student",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "not_in_handbook",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Where can I park my bicycle?"
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "I couldn't find that in the handbook."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "agent50_capstone",
+        "user_id": "student",
+        "state": {}
+      }
+    },
+    {
+      "eval_id": "guest_cannot_book",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {
+            "role": "user",
+            "parts": [
+              {
+                "text": "Book Room A tomorrow at 14:00 for 1 hour for 2 people."
+              }
+            ]
+          },
+          "final_response": {
+            "role": "model",
+            "parts": [
+              {
+                "text": "I can't book a room for you because you are not logged in. Please log in as a library member to book a study room."
+              }
+            ]
+          }
+        }
+      ],
+      "session_input": {
+        "app_name": "agent50_capstone",
+        "user_id": "student",
+        "state": {}
+      }
+    }
+  ]
+}

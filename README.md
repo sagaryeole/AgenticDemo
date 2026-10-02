@@ -2,8 +2,8 @@
 
 A hands-on tutorial. Each `agentNN_*` folder adds exactly one new idea to the one before it, and has a
 `CASES.md` with a diagram of how it executes plus small cases to try, easiest first.
-[questions.md](questions.md) explains the core ideas, sums up what each agent showed, and ends with questions to check
-your understanding.
+[questions.md](questions.md) is the study guide: 12 topic modules with diagrams, charts of the measured results, the main lessons,
+and 100 questions (with hidden answers) to check your understanding.
 
 ## The agents
 
@@ -58,15 +58,15 @@ your understanding.
 | 47 | `agent47_batch_processing` | One agent over many items: concurrency, retries, saved results and resume | switchable |
 | 48 | `agent48_permissions` | Who may do what: a role check in code against a prompt-only rule, and a rate limit | switchable |
 | 49 | `agent49_distillation` | A lab: a big model labels examples, a small model uses them | Gemini + local |
+| 50 | `agent50_capstone` | **Capstone**: a library assistant that combines search, bookings with approval, permissions, memory, injection defences, a backup model, tests and an HTTP client | switchable |
 
 Notes on this table:
 - "switchable" means the model comes from `MODEL_PROVIDER` (see Setup). "embeddings" means it uses `EMBEDDING_PROVIDER` instead.
 - Agents 16-19, 35, 36, 39 and 49 are **labs**: plain Python scripts you run with `uv run python agentNN_.../script.py`, not agents you chat with.
   Their `CASES.md` says exactly what to run. (Labs 35, 36, 39 and 49 call a model directly through `common/llm.py`.)
-- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34, 37, 38, 43-48); their `CASES.md` says how to run them.
-  Agents 27, 32, 41 and 44 need two terminals: one for a server, one for the agent or client.
-- Agents 16-20, 35 and 36 share `data/handbook.md` and the code in `common/rag.py` and `common/embeddings.py`.
-- `triage_agent` is a separate, earlier experiment (RAG over runbooks) and is not part of the sequence.
+- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34, 37, 38, 43-48, 50); their `CASES.md` says how to run them.
+  Agents 27, 32, 41, 44 and 50 (its HTTP client) need two terminals: one for a server, one for the agent or client.
+- Agents 16-20, 35, 36 and 50 share `data/handbook.md` and the code in `common/rag.py` and `common/embeddings.py`.
 
 ## Setup
 
@@ -110,7 +110,7 @@ Switch the model for agents 07+ without editing code:
     MODEL_PROVIDER=local  uv run adk run agent08_workflow
     MODEL_PROVIDER=gemini uv run adk run agent08_workflow
 
-Run the evals (agents 13, 20 and 25):
+Run the evals (agents 13, 20, 25 and 50):
 
     uv run adk eval agent13_evals agent13_evals/bookshop.evalset.json \
         --config_file_path agent13_evals/test_config.json
@@ -118,6 +118,8 @@ Run the evals (agents 13, 20 and 25):
         --config_file_path agent20_rag/rag_config.json
     uv run adk eval agent25_multiturn_evals agent25_multiturn_evals/lunch.evalset.json \
         --config_file_path agent25_multiturn_evals/multiturn_config.json
+    uv run adk eval agent50_capstone agent50_capstone/library.evalset.json \
+        --config_file_path agent50_capstone/eval_config.json
 
 ## How to study
 
@@ -125,4 +127,4 @@ Run the evals (agents 13, 20 and 25):
 2. Run each case yourself, compare with the "Expect" line, then read "Learn".
 3. Results that involve a language model can differ between runs and between Gemini and the local model.
    The "Expect" lines say what happened when the case was tested.
-4. After each group of agents, try the matching questions in Part 4 of [questions.md](questions.md).
+4. After each group of agents, read the matching module of the study guide [questions.md](questions.md) and answer its questions.
