@@ -1,0 +1,21 @@
+{
+  "criteria": {
+    "rubric_based_final_response_quality_v1": {
+      "threshold": 0.8,
+      "rubrics": [
+        {
+          "rubric_id": "short_and_direct",
+          "rubric_content": {"text_property": "The response answers the user's question directly in one or two sentences, with no unrelated information."}
+        },
+        {
+          "rubric_id": "no_invented_allergens",
+          "rubric_content": {"text_property": "The response does not mention any allergen or ingredient unless it is part of the dish or allergen information the agent received from its tools."}
+        },
+        {
+          "rubric_id": "uses_earlier_turn",
+          "rubric_content": {"text_property": "When the user says 'it' or 'that', or asks a short follow-up, the response is about the dish or day discussed earlier in the conversation, not a different one."}
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "eval_set_id": "lunch_conversations",
+  "name": "Lunch menu conversations",
+  "description": "Multi-turn conversations. Later turns say 'it' or 'that', so the agent must use what was said earlier.",
+  "eval_cases": [
+    {
+      "eval_id": "follow_up_it",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "What's for lunch on Tuesday?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "On Tuesday the lunch is Chicken satay."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_lunch", "args": {"day": "Tuesday"}}], "intermediate_responses": []}
+        },
+        {
+          "invocation_id": "t2",
+          "user_content": {"role": "user", "parts": [{"text": "Does it contain nuts?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "Chicken satay contains peanuts."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_allergens", "args": {"dish": "Chicken satay"}}], "intermediate_responses": []}
+        },
+        {
+          "invocation_id": "t3",
+          "user_content": {"role": "user", "parts": [{"text": "And what is for lunch on Wednesday?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "On Wednesday the lunch is Pasta bolognese."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_lunch", "args": {"day": "Wednesday"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent25_multiturn_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "weekend_then_friday",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "What's for lunch on Saturday?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "There is no school lunch on Saturday. Lunch is served Monday to Friday."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_lunch", "args": {"day": "Saturday"}}], "intermediate_responses": []}
+        },
+        {
+          "invocation_id": "t2",
+          "user_content": {"role": "user", "parts": [{"text": "Okay, what about Friday then?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "On Friday the lunch is Cheese pizza."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_lunch", "args": {"day": "Friday"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent25_multiturn_evals", "user_id": "student", "state": {}}
+    },
+    {
+      "eval_id": "gluten_check",
+      "conversation": [
+        {
+          "invocation_id": "t1",
+          "user_content": {"role": "user", "parts": [{"text": "What's for lunch on Monday?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "On Monday the lunch is Vegetable soup."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_lunch", "args": {"day": "Monday"}}], "intermediate_responses": []}
+        },
+        {
+          "invocation_id": "t2",
+          "user_content": {"role": "user", "parts": [{"text": "My daughter can't eat gluten. Is it okay for her?"}]},
+          "final_response": {"role": "model", "parts": [{"text": "Vegetable soup contains celery but no gluten, so it should be fine for her."}]},
+          "intermediate_data": {"tool_uses": [{"name": "get_allergens", "args": {"dish": "Vegetable soup"}}], "intermediate_responses": []}
+        }
+      ],
+      "session_input": {"app_name": "agent25_multiturn_evals", "user_id": "student", "state": {}}
+    }
+  ]
+}

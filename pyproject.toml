@@ -14,8 +14,10 @@ description = "Step-by-step Google ADK tutorial: one new agent concept per folde
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "a2a-sdk[http-server]>=0.3.4,<2",
     "google-adk[extensions]>=2.10.0",
     "google-cloud-aiplatform>=2.2.0",
+    "httpx>=0.28.1",
     "jinja2>=3.1.6",
     "mcp>=2.2.0",
     "nltk>=3.10.3",

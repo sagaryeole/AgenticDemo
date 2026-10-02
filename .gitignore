@@ -14,3 +14,6 @@ wheels/
 
 # ADK runtime data (chat sessions, eval results)
 .adk/
+
+# agent21's saved memories about the user (personal data)
+agent21_memory/memory.json
