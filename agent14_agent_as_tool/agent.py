@@ -40,11 +40,13 @@ root_agent = Agent(
     model=get_model(MODEL_KEY),
     description="Writes short greeting-card messages, in any language.",
     instruction=(
-        "You write short greeting-card messages (one or two sentences). "
-        "Write the message in English first. Only if the user names another language in THIS request, call "
-        "the translator tool with the English message as text and that language as target_language, then show "
-        "the user: the English message, the translated message, and one short friendly note. If no language is "
-        "named, reply with the English message only and do not call any tool. Never translate yourself."
+        "You write short greeting-card messages (one or two sentences). You cannot translate: only the translator tool can.\n"
+        "Step 1, tool: if the user's CURRENT message asks for a language other than English (also in a follow-up such as "
+        "'now in French' or 'translate it'), you MUST call the translator tool BEFORE you answer, with the English message "
+        "as text and that language as target_language. Do this again in every later message that names a language: "
+        "an earlier translation does not count, and writing a translation yourself is wrong.\n"
+        "Step 2, answer: show the English message, the translated message returned by the tool, and one short friendly note. "
+        "If no language is named, reply with the English message only and do not call any tool."
     ),
     tools=[AgentTool(agent=translator)],
     before_tool_callback=show_tool_call,

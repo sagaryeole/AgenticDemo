@@ -150,7 +150,7 @@ wrong: expecting `"J.R.R. Tolkien"` as the argument failed 3 of 3 runs because t
 
 ---
 
-# Part 3: What agents 14-27 showed
+# Part 3: What agents 14-34 showed
 
 Again, each point comes from something that was run in this repo. Many results involve language models, which are not
 deterministic: where a number is quoted it is what happened in testing, and your runs may differ.
@@ -240,6 +240,45 @@ A2A lets an agent call another agent in a different process over HTTP. The serve
 only its URL. Two lessons from testing. First, trust: when the remote agent used the local model it made up a shipping price ($25.50 instead of $39.00)
 without calling its tool, and the caller received only text and could not tell. Second, when the remote server was down, the client printed no error
 to the user at all, only a log entry. Treat a remote agent like any external service: verify what matters, and handle it being unavailable.
+
+## Images are just another part of the message (agent28)
+A message is a list of parts: text, and also images (bytes plus a type such as `image/png`). Both Gemini and the local Qwen model counted the shapes,
+read the receipt and caught its wrong total (10.25, not 11.25), and read the chart correctly. The most important lesson came from a missing file:
+when no image was attached, Gemini answered "based on the image menu.png" with a completely invented menu, a different one each run. The fix was in the
+code: when a file is missing, add a text part that says so. An image also costs a lot of tokens (about 1,800 on Gemini for one small chart), and every
+earlier image is sent again with every call.
+
+## An instruction can be a function (agent29)
+An instruction can be built by a function that ADK calls before every model call, using session state. When a tool changed the level from "student"
+to "kid", the very next answer was written for a child. Two lessons: first, the local model at first said "Your level has been updated" without calling
+the tool, so nothing changed; ordering the instruction as "Step 1, tools ... Step 2, the answer" fixed it. Second, one worked example in the
+instruction (few-shot) kept the answer format exact on both models; describing the format only in words made the local model drop a label every time.
+
+## Long conversations: keep, trim, or summarise (agent30)
+Every call sends the whole conversation, so the prompt grew from 86 to 1,216 tokens over 14 short turns. Keeping only the last 3 turns kept it flat at about
+250 tokens but forgot the user's peanut allergy; the local model even called the user "Alex". Letting ADK summarise older turns kept all three facts, but
+saved little here (the turns were short), and one local summary turned the user's cat into a dog. Store facts that must never be lost somewhere explicit.
+
+## Prompt injection: text in data that pretends to be an order (agent31)
+Review pages contained planted instructions. With no defence, both models were fooled, by different attacks: Gemini obeyed a fake "[SYSTEM MESSAGE]"
+(2 of 3 runs, "the best toaster ever made") and a polite note with a link; the local model repeated a fake safety recall as true (3 of 3). Saying in the
+instruction that page text is data, inside clear markers, stopped every attack in testing, and the models flagged the suspicious reviews. A code filter of
+known attack phrases removed the obvious attacks but missed the politely worded one. Use several layers, and give an agent that reads untrusted text as few
+powerful tools as possible.
+
+## Tools from an API description (agent32)
+`OpenAPIToolset` turned a REST API's OpenAPI description into four tools, and each tool call became a real HTTP request (visible in the server log). Both
+models listed, added, completed and filtered tasks, and handled a 404 for a task that did not exist. When the server was down, the first version crashed with
+a `ConnectError`; an `on_tool_error_callback` turned the exception into an error result that the model explained.
+
+## Slow jobs (agent33)
+Two patterns. The ticket pattern: a tool starts the job and returns an id at once, and another tool reports progress, so the conversation never freezes.
+Pause and resume: with `LongRunningFunctionTool` the call stays open, and the app later sends the real result with the same call id. Both worked on both models.
+
+## Sessions that last, and who can see what (agent34)
+With a database session service, a conversation can be continued by its id in a new program run. State keys have scopes: `user:books` was visible in every
+session of the same user, a key without prefix stayed in its own session, and another user saw nothing. The local model once said "I've noted that as the
+topic" without calling the tool; listing the stored state showed the truth.
 
 ---
 
@@ -390,13 +429,64 @@ Look at the sequence of model calls and tool calls, with timing and tokens, befo
 **43. Where did most of the time go in a typical run?**
 Waiting for the model (79 to 96 percent), not running tools. (agent26)
 
+## Images, context and safety (agents 28-34)
+
+**44. How does an image reach the model?**
+As one more part of the message, next to the text: the image bytes and their type, for example `image/png`. (agent28)
+
+**45. Your code failed to attach an image, but the model described it anyway. What went wrong, and what is the fix?**
+The model answered about content it never received. Tell it plainly in the request that the file is missing. (agent28)
+
+**46. Why is a long chat with images expensive?**
+Every call sends the whole conversation again, including every earlier image, and one image can be about 1,800 tokens. (agent28, agent30)
+
+**47. What is an instruction provider, and when is it called?**
+A function that builds the instruction from session state. ADK calls it before every model call. (agent29)
+
+**48. Why add a worked example (few-shot) to an instruction?**
+Models copy examples closely. One example kept the answer format exact, where a description in words did not. (agent29)
+
+**49. The agent says "I've updated your level". How do you check that it really did?**
+Look at the state (or the printed instruction), not the reply. A model can claim an action it never performed. (agent29, agent34)
+
+**50. Why does every call get more expensive in a long conversation?**
+The model has no memory; the whole history is sent each time. (agent30)
+
+**51. What is the risk of keeping only the last few turns?**
+Facts from earlier turns are forgotten, and the model may answer confidently that they were never said. (agent30)
+
+**52. What is the risk of summarising old turns?**
+The summary is written by a model and can drop or change facts, and the original turns are no longer sent. (agent30)
+
+**53. What is prompt injection?**
+Text inside data the agent reads (a page, a review, an email) that pretends to be an instruction for the AI. (agent31)
+
+**54. Why is a filter of known attack phrases not enough?**
+Attackers rephrase. The politely worded lamp note passed the filter. Combine it with an instruction that treats page text as data, output checks, and few
+powerful tools. (agent31)
+
+**55. What does `OpenAPIToolset` do?**
+It reads a service's OpenAPI description and creates one tool per endpoint; each call becomes a real HTTP request. (agent32)
+
+**56. What happens when a tool's service is down, and how do you handle it?**
+The exception stops the run. An `on_tool_error_callback` can turn it into an error result the model can explain. (agent32)
+
+**57. How should an agent handle a job that takes minutes?**
+Start it and return a ticket at once, then report progress on request; or use `LongRunningFunctionTool` and send the result back when it is ready. (agent33)
+
+**58. What is the difference between `user:books` and `chat_topic` in state?**
+`user:books` belongs to the user and is visible in all their sessions. `chat_topic` has no prefix, so it belongs to one session only. (agent34)
+
+**59. Why store sessions in a database?**
+So a conversation can be continued later, from another program run or another server, by its session id. (agent34)
+
 ## Putting it together
 
-**44. How do you stop an agent from making things up when the data is missing?**
+**60. How do you stop an agent from making things up when the data is missing?**
 Ground it: answer only from tool or retrieved data, return the needed fields from your tools, say "I couldn't find that" when nothing matches, and label any guess as a guess. No method removes made-up answers completely; the aim is to make the line between fact and guess visible. (agent12, agent20, `triage_agent`)
 
-**45. How do you know your agent still works after you change the prompt or the model?**
+**61. How do you know your agent still works after you change the prompt or the model?**
 Run an eval set with both a tool-call check and an answer check on every change, and add a new case for every bug you find. (agent13, agent20, agent25)
 
-**46. What changes when you switch to a small local model?**
+**62. What changes when you switch to a small local model?**
 It is slower and less reliable at counting, at calling a tool again in later turns, and at strict judgement. Keep each decision small and move checkable rules into code. (agent10, agent20, agent25, agent27)

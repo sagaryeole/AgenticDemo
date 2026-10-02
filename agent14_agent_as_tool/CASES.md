@@ -61,10 +61,21 @@ function signature. Try it: delete `input_schema=TranslationRequest` and compare
 Put it back afterwards.
 
 ## Case 5: the model skipping the tool
-Ask for several translations in new sessions, on the local model.
-Expect: usually a tool call. Small models sometimes answer without calling the tool, or translate on their own
-even though the instruction says never to.
-Learn: the instruction guides, but does not force. If you must guarantee a translation, call the translator from code.
+First request in a new session: both models called the translator every time in testing (12 of 12 each).
+The problem shows up on the SECOND request in the same session. Try on the local model:
+> Write a thank-you note for my teacher.
+> Now translate it into Swedish.
+
+Expect (original instruction, local `qwen3.5-9b`): no `[tool call]` line. The model translated by itself, or only repeated the English
+message, and even "Now write a get-well message for my neighbour in French" (after a Swedish card) skipped the tool 3 times out of 3.
+Gemini called the tool every time. Asking again ("you forgot to call the translator") made the local model call it.
+Cause: after one reply that already contains a translation, a small model copies that pattern instead of calling the tool again.
+Fix (now in `agent.py`): the instruction has two steps, "Step 1, tool: ... call the translator BEFORE you answer ... an earlier translation
+does not count", then "Step 2, answer". With it the local model called the tool on 14 of 15 follow-ups (it missed one "Can you do that in
+French too?").
+Learn: the same lesson as agent29. A small model follows an instruction that puts the tool call first and says it must be repeated every
+time much better than one that only says "if a language is named, call the tool". It is still a request, not a guarantee: if you must
+guarantee a translation, call the translator from code.
 
 ## Case 6: transfer or tool?
 | | Transfer (agent07, `sub_agents`) | Agent as a tool (agent14, `AgentTool`) |

@@ -17,3 +17,7 @@ wheels/
 
 # agent21's saved memories about the user (personal data)
 agent21_memory/memory.json
+
+# agent34's session database (conversations, personal data)
+agent34_persistent_sessions/sessions.db
+*.session.json

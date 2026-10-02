@@ -36,12 +36,20 @@ your understanding.
 | 25 | `agent25_multiturn_evals` | Evaluating multi-turn conversations | switchable |
 | 26 | `agent26_observability` | Plugins, logs and OpenTelemetry spans | switchable |
 | 27 | `agent27_a2a` | Agent-to-Agent (A2A): calling an agent in another process | switchable |
+| 28 | `agent28_multimodal` | Images as input (both models read images) | switchable |
+| 29 | `agent29_dynamic_instructions` | An instruction built from state on every call, and few-shot examples | switchable |
+| 30 | `agent30_long_conversations` | Long chats: keep everything, trim, or summarise | switchable |
+| 31 | `agent31_prompt_injection` | Hidden instructions in data, and layered defences | switchable |
+| 32 | `agent32_openapi_tools` | Tools generated from a REST API's OpenAPI description | switchable |
+| 33 | `agent33_long_running` | Slow jobs: the ticket pattern, and pause-and-resume | switchable |
+| 34 | `agent34_persistent_sessions` | Sessions in a database, and state scopes (`user:`) | switchable |
 
 Notes on this table:
 - "switchable" means the model comes from `MODEL_PROVIDER` (see Setup). "embeddings" means it uses `EMBEDDING_PROVIDER` instead.
 - Agents 16-19 are **labs**: plain Python scripts you run with `uv run python agentNN_.../script.py`, not agents you chat with.
   Their `CASES.md` says exactly what to run.
-- Agents 21 and 24 have extra scripts next to `agent.py`. Agent 27 needs two terminals.
+- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34); their `CASES.md` says how to run them.
+  Agents 27 and 32 need two terminals: one for a small server, one for the agent.
 - Agents 16-20 share `data/handbook.md` and the code in `common/rag.py` and `common/embeddings.py`.
 - `triage_agent` is a separate, earlier experiment (RAG over runbooks) and is not part of the sequence.
 
@@ -74,7 +82,8 @@ Notes on this table:
    and not in `.env.example`: `EMBEDDING_PROVIDER`, `GEMINI_EMBEDDING_MODEL`, `LOCAL_EMBEDDING_MODEL`.
 
 If you see `No API key was provided`, the Gemini settings in `.env` are missing.
-Gemini can answer `429 RESOURCE_EXHAUSTED` when many calls arrive quickly (long evaluation loops). Wait a minute and retry.
+Gemini can answer `429 RESOURCE_EXHAUSTED` when many calls arrive quickly. Agents 07+ retry automatically (see `common/models.py`);
+if it still fails, wait a minute and try again.
 
 ## Run
 

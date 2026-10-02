@@ -6,7 +6,9 @@ get_model(). Set <AGENT_NAME>_MODEL_PROVIDER to override a single agent.
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from google.adk.models import Gemini
 from google.adk.models.lite_llm import LiteLlm
+from google.genai import types
 
 # Root .env holds the global choice. override=False keeps real environment
 # variables (and each agent folder's own .env) in charge when they are set.
@@ -28,8 +30,12 @@ def get_model(agent_name: str | None = None):
     provider = (provider or os.environ.get("MODEL_PROVIDER", "gemini")).lower()
 
     if provider == "gemini":
-        # ADK treats a plain string as a native Gemini model name.
-        return os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+        # A Gemini object instead of the plain model name, so we can add retries: when Google answers
+        # "429 RESOURCE_EXHAUSTED" (too many requests in a short time), wait and try again instead of failing.
+        return Gemini(
+            model=os.environ.get("GEMINI_MODEL", "gemini-2.5-flash"),
+            retry_options=types.HttpRetryOptions(attempts=6, initial_delay=5, max_delay=60, http_status_codes=[429, 503]),
+        )
 
     if provider == "local":
         base = os.environ.get("LOCAL_API_BASE", "http://127.0.0.1:1234/v1")
