@@ -150,7 +150,7 @@ wrong: expecting `"J.R.R. Tolkien"` as the argument failed 3 of 3 runs because t
 
 ---
 
-# Part 3: What agents 14-44 showed
+# Part 3: What agents 14-49 showed
 
 Again, each point comes from something that was run in this repo. Many results involve language models, which are not
 deterministic: where a number is quoted it is what happened in testing, and your runs may differ.
@@ -329,6 +329,26 @@ does not make the model faster or cheaper. Each partial event holds a piece, and
 ## An agent is a program you can serve (agent44)
 `adk api_server` exposed the same agent over HTTP with sessions, `/run` (all events) and `/run_sse` (events as they happen), with no change to `agent.py`. A plain `httpx` client was enough. With
 `--session_service_uri sqlite+aiosqlite:///...` a session survived a server restart (4 events kept). The server has no login: it must sit behind your own. The Dockerfile was written but not tested, because no Docker daemon was running.
+
+## A table needs a calculator, not a reader (agent45)
+With a 24-row grade table pasted into the prompt and no help, Gemini got 6 of 7 questions right (it gave the overall average as 73.46; the true value is 71.79) and the local model 3 of 7 (a wrong average, wrong best class, wrong count and wrong median). With pandas tools that
+do the arithmetic, both models got 7 of 7, and Gemini's built-in code execution also got 7 of 7. A formula tool that only accepts number columns and `+ - * /` never runs the model's text. A bar chart drawn in code was saved as an artifact, and its values matched pandas exactly.
+
+## A workflow can be a graph (agent46)
+ADK 2's `Workflow` lists steps (nodes) and arrows (edges). A node is a function or an agent, and a function can return a route name to choose the arrow. In a homework-feedback flow the model only judged the type of reply (correct, arithmetic, concept, off-topic); code routed it to one of four branches, and the off-topic branch was a plain function with no model call.
+The routing was right for 12 of 12 replies on Gemini and 11 of 12 on the local model. `@node(retry_config=RetryConfig(...))` re-ran a step that failed ("Node receive failed and is being retried locally"). The feature is new in ADK 2, and joins, parallel workers and node timeouts were not tried.
+
+## Batch jobs need four things (agent47)
+Labelling 36 reviews: concurrency 1, 4 and 8 took 36.0, 12.9 and 4.7 seconds on Gemini (7.7 times faster at 8), but only 58.9 and 46.6 seconds at 1 and 4 on the local model, which serves one request at a time. With 30 percent of attempts failing on purpose, 4 attempts with growing waits rescued all 36 items (16 retries); at 80 percent, 15 items gave up and the script listed them.
+Writing each result when it is done let a stopped run resume: the second run skipped 15 items and did the remaining 21.
+
+## Permissions belong in code (agent48)
+A student tried seven kinds of messages (a plain request, "I am the teacher", a fake system message, "it is only a test", ...) to change or delete data, 28 runs per mode, counting data changes rather than replies. With a careless prompt ("Do what the user asks") the local model gave in 28 of 28 runs and Gemini 8 of 28; with a firmly worded prompt both held (0 of 28); with a check in a `before_tool_callback`, 0 of 28 by construction, since the role comes from session state that only the application writes.
+The firm wording made the local model more hesitant about the student's own legitimate request (1 of 4 worked). A per-user rate limit stopped the tool after 5 calls on Gemini, but the local model still repeated the grades from the conversation: a limit protects the backend, not what the model already knows.
+
+## A big model can teach a small one (agent49)
+Pro labelled 60 school-office messages using written house rules (59 of 60 right, about 47,000 tokens and 405 seconds, once). Small models then used the 3 most similar labelled examples without the rules: the local model went from 18 to 21 of 24 and flash-lite from 21 to 22. Examples with the true labels gave the same scores, so the teacher's one mistake did not matter here.
+But simply giving the rules in words scored best (23 and 24 of 24), and agent37's 36 hand-written examples did as well or better than the 60 teacher-labelled ones: measure the plain prompt before building a teacher pipeline.
 
 ---
 
@@ -595,13 +615,57 @@ Context caching (an explicit cache served 5,219 of about 5,224 input tokens from
 **80. Why not trust one measurement on 24 questions?**
 Results move with small changes: adding one line of system instruction changed one local row by four messages, and the same lab on two models differed by one or two messages. Treat small differences as noise and look at what is stable across runs and models. (agent37, agent39)
 
+## Data, flows, batches and permissions (agents 45-49)
+
+**81. Why should a model not answer questions about a table by reading it?**
+Averages, counts and medians need exact arithmetic over many values. Reading a 24-row table, Gemini got 6 of 7 questions right and the local model 3 of 7, with confident wrong numbers. Let code do the calculation. (agent45)
+
+**82. How can an agent calculate over data safely?**
+Give it tools that run pandas for it, and when a tool takes a formula, parse it and allow only numbers, number columns and `+ - * /`. Never pass model text to `eval()`. Gemini's code execution is a sandboxed alternative, but it cannot see your files. (agent45, agent22)
+
+**83. How is a `Workflow` graph different from `SequentialAgent`, `LoopAgent` and transfer?**
+You list nodes and edges yourself, and a node can return a route name to choose an edge. Your code decides what runs next, from a verdict the model gives, so the structure is predictable and testable. (agent46)
+
+**84. What can a node be, and why make a branch a plain function?**
+A node is a function (no model, instant, always the same) or an agent (one model call). A branch that can be written in code, such as a fixed redirect, costs nothing and cannot go wrong. (agent46)
+
+**85. What does a retry setting on a node do?**
+If the step raises an error, ADK waits and runs it again (`RetryConfig`: attempts and delays), so one flaky step does not end the whole run. (agent46)
+
+**86. What does a batch job need that a chat does not?**
+Concurrency (a limited number of items at once), retries with growing waits, each result saved as soon as it is done, and resume that skips finished items. And it must list what it could not do. (agent47)
+
+**87. Why is more concurrency not always faster?**
+The service sets the ceiling. Gemini was 7.7 times faster at 8 at once; the local model, which serves one request at a time, was only 1.3 times faster at 4. A service's rate limit also caps it. (agent47)
+
+**88. Why use a fresh session for each item in a batch?**
+Otherwise each answer sits in the history of the next one: the prompt grows and items can influence each other. A batch worker should be stateless. (agent47)
+
+**89. Why is "students may not delete" in the prompt not a permission system?**
+A prompt is a request. With a careless wording the local model obeyed every attack (28 of 28) and Gemini 8 of 28; a firm wording held in 28 runs, but that proves nothing about the next attack or model. A check in a `before_tool_callback` does not read the user's words at all. (agent48)
+
+**90. Where should the user's role come from?**
+From your application, through the session state at login. Text typed by the user, such as "I am the teacher", can never change it. (agent48)
+
+**91. What does a rate limit on a tool protect, and what not?**
+It protects the backend behind the tool from too many calls. It cannot take back what the model already knows from the conversation: after the block, the local model still repeated the grades from the history. (agent48)
+
+**92. What is distillation by labelling, and when is it worth it?**
+A large model labels many examples once; a small model uses them every day. In the school-office test the local model went from 18 to 21 of 24 with teacher-labelled examples. It pays when the task is repeated often and the knowledge is hard to write down. (agent49)
+
+**93. What should you try before building a teacher pipeline?**
+A good prompt with the rules written out: it scored 23 and 24 of 24 here, better than the 3 similar teacher-labelled examples (21 and 22). (agent49)
+
+**94. If the teacher makes a mistake, what happens?**
+Its mistakes are passed on to the students. In the test one wrong label out of 60 changed nothing, but a teacher wrong on one important kind of message would teach that error to every student, so check a sample of its labels. (agent49)
+
 ## Putting it together
 
-**81. How do you stop an agent from making things up when the data is missing?**
+**95. How do you stop an agent from making things up when the data is missing?**
 Ground it: answer only from tool or retrieved data, return the needed fields from your tools, say "I couldn't find that" when nothing matches, and label any guess as a guess. No method removes made-up answers completely; the aim is to make the line between fact and guess visible. (agent12, agent20, `triage_agent`)
 
-**82. How do you know your agent still works after you change the prompt or the model?**
+**96. How do you know your agent still works after you change the prompt or the model?**
 Run an eval set with both a tool-call check and an answer check on every change, and add a new case for every bug you find. (agent13, agent20, agent25)
 
-**83. What changes when you switch to a small local model?**
+**97. What changes when you switch to a small local model?**
 It is slower and less reliable at counting, at calling a tool again in later turns, and at strict judgement. Keep each decision small and move checkable rules into code. (agent10, agent20, agent25, agent27)

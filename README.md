@@ -53,12 +53,17 @@ your understanding.
 | 42 | `agent42_supervisor_critic` | A supervisor managing a planner, a writer and a fact checker | switchable |
 | 43 | `agent43_streaming` | Showing the reply while it is written (SSE streaming) | switchable |
 | 44 | `agent44_serving` | An agent behind an HTTP API (`adk api_server`), a client, and a Dockerfile | switchable |
+| 45 | `agent45_data_analyst` | Questions about a table: pandas tools, Gemini code execution, or no help, measured | switchable |
+| 46 | `agent46_graph_workflow` | A workflow drawn as a graph: nodes, routes, a branch without a model, and retries | switchable |
+| 47 | `agent47_batch_processing` | One agent over many items: concurrency, retries, saved results and resume | switchable |
+| 48 | `agent48_permissions` | Who may do what: a role check in code against a prompt-only rule, and a rate limit | switchable |
+| 49 | `agent49_distillation` | A lab: a big model labels examples, a small model uses them | Gemini + local |
 
 Notes on this table:
 - "switchable" means the model comes from `MODEL_PROVIDER` (see Setup). "embeddings" means it uses `EMBEDDING_PROVIDER` instead.
-- Agents 16-19, 35, 36 and 39 are **labs**: plain Python scripts you run with `uv run python agentNN_.../script.py`, not agents you chat with.
-  Their `CASES.md` says exactly what to run. (Labs 35, 36 and 39 call a model directly through `common/llm.py`.)
-- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34, 37, 38, 43, 44); their `CASES.md` says how to run them.
+- Agents 16-19, 35, 36, 39 and 49 are **labs**: plain Python scripts you run with `uv run python agentNN_.../script.py`, not agents you chat with.
+  Their `CASES.md` says exactly what to run. (Labs 35, 36, 39 and 49 call a model directly through `common/llm.py`.)
+- Several agents have extra scripts next to `agent.py` (21, 24, 28, 30, 31, 33, 34, 37, 38, 43-48); their `CASES.md` says how to run them.
   Agents 27, 32, 41 and 44 need two terminals: one for a server, one for the agent or client.
 - Agents 16-20, 35 and 36 share `data/handbook.md` and the code in `common/rag.py` and `common/embeddings.py`.
 - `triage_agent` is a separate, earlier experiment (RAG over runbooks) and is not part of the sequence.
@@ -87,7 +92,7 @@ Notes on this table:
 5. For a local model (agents 03-06, and 07+ with `MODEL_PROVIDER=local`): install
    [LM Studio](https://lmstudio.ai/), load a model, and start the server in the Developer tab.
    Set `LOCAL_MODEL_ID` in `.env` to the id shown by `curl http://127.0.0.1:1234/v1/models`.
-6. For the RAG labs, agent 20 and agents 35-38, embeddings come from `EMBEDDING_PROVIDER`: `gemini` (default, uses the Google setup above) or
+6. For the RAG labs, agent 20, agents 35-38 and agent 49, embeddings come from `EMBEDDING_PROVIDER`: `gemini` (default, uses the Google setup above) or
    `local` (an embedding model loaded in LM Studio, `text-embedding-embeddinggemma-300m` by default). These variables are optional
    and not in `.env.example`: `EMBEDDING_PROVIDER`, `GEMINI_EMBEDDING_MODEL`, `LOCAL_EMBEDDING_MODEL`.
 

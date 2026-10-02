@@ -1,0 +1,78 @@
+"""60 NEW school-office messages (none of them is in agent37's pool or test set), each with the right department.
+The big "teacher" model will label them WITHOUT seeing these labels; they are only used to check its work.
+"""
+UNLABELED = [
+    # Office
+    ("Where do I send the form to change my child's home address?", "Office"),
+    ("My daughter was late because the train was delayed. Who do I give the note to?", "Office"),
+    ("Can you send me a copy of my son's last two report cards?", "Office"),
+    ("We need an official letter saying that Maja is enrolled, for her visa.", "Office"),
+    ("Where can I order the class photo of my son?", "Office"),
+    ("Someone handed in a blue hoodie, could it be my daughter's?", "Office"),
+    ("How do I register my little brother for the first grade?", "Office"),
+    ("My son's student card stopped working at the gate, who fixes it?", "Office"),
+    ("Is there a form to excuse my daughter from school for a family wedding?", "Office"),
+    ("He lost his gym shirt last week. Is there a box with lost clothes?", "Office"),
+    ("When are the school pictures being taken this year?", "Office"),
+    ("Our emergency phone number changed, whom do we tell?", "Office"),
+    # Cafeteria
+    ("How can I add money to my son's meal account?", "Cafeteria"),
+    ("What are they serving for lunch on Tuesday?", "Cafeteria"),
+    ("Do you offer halal meals in the canteen?", "Cafeteria"),
+    ("My daughter's lunch card shows a negative balance, what now?", "Cafeteria"),
+    ("Can I get a monthly statement of what my child bought in the cafeteria?", "Cafeteria"),
+    ("Is there a cheaper lunch price for siblings?", "Cafeteria"),
+    ("Does the canteen sell snacks at the morning break?", "Cafeteria"),
+    ("Can my son have lactose-free milk with his lunch?", "Cafeteria"),
+    ("My child forgot his lunch money today, can he pay tomorrow?", "Cafeteria"),
+    ("Can we order a vegetarian lunch every Friday?", "Cafeteria"),
+    ("Where do I find the weekly menu?", "Cafeteria"),
+    ("Can I pay for the school lunches for the whole term in advance?", "Cafeteria"),
+    # Transport
+    ("Which bus stops closest to the school gate?", "Transport"),
+    ("Is there a safe place to lock my daughter's bike?", "Transport"),
+    ("Can I get a discount pass for the school bus?", "Transport"),
+    ("The afternoon bus left without the children yesterday, who do I speak to?", "Transport"),
+    ("Where are parents allowed to stop the car when dropping off?", "Transport"),
+    ("Does the school bus run on days with half-day lessons?", "Transport"),
+    ("My son wants to cycle to school, is there a bike shed?", "Transport"),
+    ("How long is the walk from the train station to the school?", "Transport"),
+    ("Is there parking for visitors during the parents' evening?", "Transport"),
+    ("Can my daughter take her electric scooter to school?", "Transport"),
+    ("What time does the morning bus pick up at Mill Street?", "Transport"),
+    ("Is there a carpool list for parents in our area?", "Transport"),
+    # Health
+    ("My son is allergic to nuts, where do I hand in the allergy form?", "Health"),
+    ("Can the school nurse give my daughter her inhaler when she needs it?", "Health"),
+    ("He hurt his knee in football practice, does he need to see a doctor first?", "Health"),
+    ("My child has a fever and a rash, when can he return?", "Health"),
+    ("When is the flu vaccination at school?", "Health"),
+    ("My daughter has celiac disease, who must know?", "Health"),
+    ("She needs a doctor's certificate to join the swimming competition, who signs it?", "Health"),
+    ("Can the school keep an EpiPen in the nurse's office?", "Health"),
+    ("He broke his arm at sports day, what forms do we need?", "Health"),
+    ("Are head lice checks done at school?", "Health"),
+    ("My son feels dizzy at school sometimes, can the nurse call us?", "Health"),
+    ("How long should my child stay at home after a stomach bug?", "Health"),
+    # Activities
+    ("How do I join the robotics club?", "Activities"),
+    ("Where do I sign the permission slip for the trip to the science museum?", "Activities"),
+    ("Does the coach to the aquarium trip leave from the school gate?", "Activities"),
+    ("What does the winter camp cost, and can we pay in instalments?", "Activities"),
+    ("When does the school orchestra rehearse?", "Activities"),
+    ("Can my daughter try out for the basketball team?", "Activities"),
+    ("Is the bus for the class trip to the farm included in the price?", "Activities"),
+    ("Is there a sign-up for the after-school art class?", "Activities"),
+    ("Who do I ask about the school musical auditions?", "Activities"),
+    ("What time do we need to be at the school for the overnight trip?", "Activities"),
+    ("Is there a chess club for younger children?", "Activities"),
+    ("Do I need to bring money for the museum visit?", "Activities"),
+]
+
+# The school's house rules, written out. Only the TEACHER gets this text.
+HOUSE_RULES = (
+    "House rules: lunch money and meal accounts go to Cafeteria (not Office); food-allergy and diet-related medical forms go to Health (not Cafeteria); "
+    "bike racks and parking go to Transport; trip permission slips go to Activities; late-arrival notes go to Office; "
+    "the bus or coach for a SCHOOL TRIP goes to Activities (not Transport); lost clothes and school photos go to Office; "
+    "sports injuries and medical certificates for sport go to Health (not Activities)."
+)
