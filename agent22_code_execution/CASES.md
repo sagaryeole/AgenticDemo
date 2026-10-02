@@ -62,8 +62,8 @@ Learn: that is why the problem is dangerous. You cannot tell from the answer whe
 whenever the exact answer matters.
 
 ## Case 3: look at the code Gemini wrote
-`adk run` prints only the final text. Run `uv run adk web` to see the steps, or in testing the event stream contained this:
-`CODE: print(48271 * 91357)`, `OUTPUT: 4409893747`, then the text "The product of 48271 and 91357 is 4,409,893,747."
+`adk run` prints only the final text. In `uv run adk web` you can see each step. In testing, the steps for the multiplication were:
+the code `print(48271 * 91357)`, its output `4409893747`, then the text "The product of 48271 and 91357 is 4,409,893,747."
 Learn: the answer is checkable. A reviewer can read the code and the output, which is not possible for a number the model "just knew".
 
 ## Case 4: the calculator is deliberately small and safe

@@ -38,8 +38,8 @@ Defaults: Gemini uses `thinking`, a local model uses `default`.
 
 Expect: `seating solutions: ['Eve, Dan, Cleo, Ana, Ben'] -> unique`, `pets: fish owner(s): {'Ben'}`, `schedule: finish at 14:30`,
 `seating7 solutions: ['Dan, Finn, Ana, Eve, Ben, Cleo, Gus'] -> unique`.
-Learn: when you grade a model, make sure the right answer is really the only right answer. Two of my first puzzles had two valid answers; the
-brute-force check caught it before it spoiled the experiment. The 7-seat puzzle is checked by parsing its own clue sentences.
+Learn: when you grade a model, make sure the right answer is really the only right answer. The first versions of two of these puzzles had two
+valid answers; the brute-force check caught it before it spoiled the experiment. The 7-seat puzzle is checked by parsing its own clue sentences.
 
 ## Case 2: easy puzzles do not need thinking
     MODEL_PROVIDER=gemini uv run python agent24_planning/evaluate.py --mode no_thinking --only seating,schedule,pets --repeats 3
@@ -101,23 +101,23 @@ this model, because the local server does not report reasoning tokens that way.
 Learn: this model reasons in its own output, so it got the hard puzzle right where Gemini with thinking switched off guessed. The evaluator reads the
 last line, so it still works. Slower and wordier, but accurate here.
 
-## Case 8b: the planner on the local model
+## Case 9: the planner on the local model
     MODEL_PROVIDER=local uv run python agent24_planning/evaluate.py --mode plan_react --only seating7 --repeats 3
     MODEL_PROVIDER=local uv run python agent24_planning/evaluate.py --mode plan_react --tool on --only seating7 --repeats 3
 
 Expect (from testing): 3 of 3 correct without the tool (160 to 229 seconds, with 7,800 to 11,400 characters of visible plan and reasoning), and
-3 of 3 correct with the tool (116 to 251 seconds). I did not check whether the model actually called `check_seating` in those runs.
+3 of 3 correct with the tool (116 to 251 seconds). Whether the model actually called `check_seating` in those runs was not checked.
 Learn: the same planner that was erratic on Gemini worked every time on the local model. A planner interacts with the model it runs on, so a result
 for one model does not carry over to another. Overall the local model solved the hard puzzle in all 9 runs, in three different configurations, at the price of
 two to four minutes per answer.
 
-## Case 9: the measurements are noisy
+## Case 10: the measurements are noisy
 Run any of the commands above twice.
 Expect: different numbers. The tables here come from several separate batches of 3 to 4 runs.
 Learn: models are not deterministic, and 4 runs is a very small sample. Use the numbers to see the pattern (thinking helps on the hard puzzle, the planner
 was erratic), not as exact scores. Also, Vertex can answer `429 RESOURCE_EXHAUSTED` when calls arrive quickly; `evaluate.py` waits and retries.
 
-## Case 10: what to take away
+## Case 11: what to take away
 | Technique | Hard puzzle result (Gemini) | Cost |
 |---|---|---|
 | nothing (thinking off) | guesses, 2/4 and 0/3 | fastest |

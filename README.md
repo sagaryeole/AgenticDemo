@@ -2,7 +2,8 @@
 
 A hands-on tutorial. Each `agentNN_*` folder adds exactly one new idea to the one before it, and has a
 `CASES.md` with a diagram of how it executes plus small cases to try, easiest first.
-Concept notes and likely questions are in [questions.md](questions.md).
+[questions.md](questions.md) explains the core ideas, sums up what each agent showed, and ends with questions to check
+your understanding.
 
 ## The agents
 
@@ -89,3 +90,15 @@ Run the evals (agents 13, 20 and 25):
 
     uv run adk eval agent13_evals agent13_evals/bookshop.evalset.json \
         --config_file_path agent13_evals/test_config.json
+    uv run adk eval agent20_rag agent20_rag/rag.evalset.json \
+        --config_file_path agent20_rag/rag_config.json
+    uv run adk eval agent25_multiturn_evals agent25_multiturn_evals/lunch.evalset.json \
+        --config_file_path agent25_multiturn_evals/multiturn_config.json
+
+## How to study
+
+1. Go through the agents in order. Each `CASES.md` starts with a diagram, then cases from easy to hard.
+2. Run each case yourself, compare with the "Expect" line, then read "Learn".
+3. Results that involve a language model can differ between runs and between Gemini and the local model.
+   The "Expect" lines say what happened when the case was tested.
+4. After each group of agents, try the matching questions in Part 4 of [questions.md](questions.md).

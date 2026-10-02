@@ -60,16 +60,21 @@ Local table:
 Gemini: at 0.50 it keeps 12/12 and rejects 1/3; at 0.65 it keeps 6/12 and rejects 3/3.
 Learn: the two ranges overlap, so no threshold is perfect. A higher cut-off rejects more bad questions but also loses good
 ones. "Does the library sell coffee?" scores 0.62 on Gemini, higher than several correct matches. Choose the threshold from
-your own data, and recheck it when you switch models (lab 17, case 4).
+your own data, and recheck it when you switch models (lab 17, case 5).
 
-## Case 4: a question with no answer (Part 3 table, bottom rows)
-Run an unanswerable question through `Index.search(question, k=3, min_score=0.65)` on the `sections` index in a Python shell.
-Expect: an empty list for all three unanswerable questions, on both providers. With `min_score=0.0` the same call returns
-three chunks that have nothing to do with the question. With `min_score=0.6`, Gemini still returns one chunk for the
-coffee question (its best score is 0.617).
-Learn: returning nothing is a result. The price of 0.65 is that it also rejects about half of the good answers (case 3 table),
-so in lab 20 the cut-off is set lower and the instruction tells the model to check that the text really answers the question. In lab 20 the agent will say "I could not find that in the handbook" when the list is
-empty, instead of inventing an answer from the closest wrong chunk.
+## Case 4: a question with no answer
+Try one unanswerable question yourself, first with a minimum score of 0.65, then with none:
+
+    EMBEDDING_PROVIDER=local uv run python -c "from common.rag import Index, sections, load_handbook; \
+    idx = Index(sections(load_handbook())); \
+    print(idx.search('Where can I park my bicycle?', k=3, min_score=0.65)); \
+    print(len(idx.search('Where can I park my bicycle?', k=3)))"
+
+Expect: `[]` (an empty list), then `3`. All three unanswerable questions gave an empty list at 0.65 on both providers. At 0.6,
+Gemini still returned one chunk for the coffee question (its best score is 0.617).
+Learn: returning nothing is a valid result. The price of 0.65 is that it also rejects about half of the good answers (case 3
+table). So agent20 uses a lower cut-off and tells the model to check that the passage really answers the question, and to say
+"I couldn't find that in the handbook" when it does not.
 
 ## Case 5: exact words rescue short queries (Part 4)
 Expect (`paragraphs+heading` index): with weight 0.0, 4 of the 5 exact-term queries find their chunk. With weight 0.2 all 5 do.

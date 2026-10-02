@@ -52,10 +52,10 @@ Expect: a second tool call with `target_language` French, and the reply is again
 Learn: unlike agent07, no other agent took over the conversation. The caller delegates one job and continues.
 
 ## Case 4: a typed input matters
-Look at `TranslationRequest` in `agent.py`. During development this agent first had no `input_schema`.
-Then an agent-as-tool takes a single free-text `request`. The local model called
-`translator({'request': 'Happy Birthday, Anna! ...'})` without any language, so the translator had nothing to translate
-into and just returned English. Gemini happened to write "target_language: Swedish" inside the string.
+Look at `TranslationRequest` in `agent.py`. Without an `input_schema`, an agent used as a tool takes one free-text
+argument called `request`. The first version of this agent had none, and the local model called
+`translator({'request': 'Happy Birthday, Anna! ...'})` with no language in it, so the translator just returned English.
+(Gemini happened to write "target_language: Swedish" inside the string.)
 Learn: a sub-agent's `input_schema` turns one vague string into named arguments (`text`, `target_language`), like a
 function signature. Try it: delete `input_schema=TranslationRequest` and compare the `[tool call]` line.
 Put it back afterwards.

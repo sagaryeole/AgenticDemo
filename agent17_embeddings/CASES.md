@@ -46,29 +46,29 @@ ranks first (Gemini 0.739, local 0.788), ahead of printing prices and study room
 Learn: the question has almost no words in common with the answer. A keyword search for "cost" and "return" would
 miss it. This is why embeddings are used for search.
 
-## Case 4: scores are not comparable across models
-Compare the two providers' numbers in cases 2 and 3.
+## Case 4: the whole document as a matrix (Part 4)
+Expect: 10 sections give a matrix of shape `(10, 768)`.
+Learn: that matrix is a complete "vector index". Searching later means comparing the question's vector with each row.
+Real systems store millions of rows in a vector database, but the idea is the same.
+
+## Case 5: scores are not comparable across models
+Compare the two providers' numbers in cases 2 and 3 (run the script twice, once with `EMBEDDING_PROVIDER=local`).
 Expect: the same ranking, but different absolute numbers (0.79 vs 0.61 for the same pair in Part 2).
 Learn: a score of 0.7 means different things in different models. A threshold ("only accept above 0.7", lab 19) must
 be chosen for the model you use, and rechecked if you switch.
 
-## Case 5: question or document? (Part 5, Gemini only)
+## Case 6: question or document? (Part 5, Gemini only)
 Expect: the same question scores 0.739 against the right answer when embedded as a `query`, and 0.919 when embedded as
 a `document`. The unrelated sentence goes from 0.454 to 0.765, so the gap shrinks from 0.285 to 0.154.
 Learn: Gemini embedding models take a task setting. Use `query` for the question and `document` for the text you
 search. With the wrong setting the ranking can still be right here, but it is less clear-cut, and a threshold set for one
 setting will not work for the other.
 
-## Case 6: never mix models (Part 6)
+## Case 7: never mix models (Part 6)
 Expect: both models return 768 numbers, so the math runs without an error. Gemini question vs Gemini answer: 0.739.
 Local vs local: 0.788. Gemini question vs local answer: 0.027, which is meaningless.
 Learn: each model has its own "space". Embed the documents and the questions with the same model, and if you switch
 models, embed everything again. A mix-up gives plausible-looking numbers and no error message, which makes it a quiet bug.
-
-## Case 7: the whole document as a matrix (Part 4)
-Expect: 10 sections give a matrix of shape `(10, 768)`.
-Learn: that matrix is a complete "vector index". Searching later means comparing the question's vector with each row.
-Real systems store millions of rows in a vector database, but the idea is the same.
 
 ## Case 8: try your own sentences
 Edit the lists in Parts 2 and 3. Try two sentences that mean the same thing with different words, then two that share

@@ -44,7 +44,7 @@ where it went wrong.
 ## Case 2: a right answer with the wrong path (Gemini, `weekend_then_friday`)
 Open the details for `weekend_then_friday`.
 Expect: `final_response_match_v2` passes with 1.0, but `tool_trajectory_avg_score` is 0.5. For "What's for lunch on Saturday?" Gemini
-answered "There is no lunch on Saturday" without calling `get_lunch`. My test expected a tool call on every turn.
+answered "There is no lunch on Saturday" without calling `get_lunch`. The eval set expects a tool call on every turn.
 Learn: the answer is right, so is it a failure? The agent skipped the tool because it already knew school lunch is Monday to Friday.
 That might be fine, or you might require a tool call so that the menu stays the single source of truth. The eval does not decide that
 for you. You either change the expectation or the agent.
@@ -93,7 +93,7 @@ Expect (Gemini, from testing; the buggy runs were repeated 3 times with the same
   question and not "Vegetable soup contains celery but no gluten".
 Learn: two lessons. First, the multi-turn eval notices lost context: the failing turn is exactly the one that needs the earlier turn.
 Second, the LLM judge missed it every time here, while the plain tool-call check caught it. Do not rely on one metric. Keep a strict,
-mechanical check next to the judge. (I could not explain why the judge passed the non-answer; treat it as a known weakness of this metric.)
+mechanical check next to the judge. (Why the judge passed a non-answer is not known; treat it as a weakness of this metric.)
 
 Also note: simply telling the model "treat every message as a new question, do not use earlier messages" did NOT break it. Gemini passed 3 of
 3 cases anyway, because ADK still sends the history and the model uses it. A lost-context bug is a code or configuration bug, not a prompt.

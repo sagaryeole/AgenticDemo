@@ -14,7 +14,8 @@ Two programs, so you need TWO terminals, both from the project root:
 Each side picks its own model with `MODEL_PROVIDER`. They need not match: `MODEL_PROVIDER=gemini` for the server and
 `MODEL_PROVIDER=local` for the client works. Server and client share only a URL (default `http://localhost:8001`, change it with
 `SHIPPING_AGENT_URL`). The client never imports the server's code.
-Needs the `a2a-sdk` package (added to `pyproject.toml`; run `uv sync`).
+Needs the `a2a-sdk` package (it is in `pyproject.toml`, so `uv sync` installs it).
+Tip: put `PYTHONUNBUFFERED=1` in front of the server command, so its `print` lines show up straight away.
 
 ## How it executes
 Control: the LLM in the client decides when to hand over to the remote agent (as in agent07). The call itself goes over HTTP.
@@ -44,7 +45,7 @@ why the client in `agent.py` needs only the card's URL.
 ## Case 2: a question the shop assistant answers itself
 > What is the capital of France?
 
-Expect: the answer comes from `[shop_assistant]`, and nothing is sent to the server (the server terminal shows no new request).
+Expect: the answer comes from `[shop_assistant]`, and no question is sent to the server (no new `POST /` line in the server terminal).
 Learn: the client only calls the remote agent when its own instruction says to.
 
 ## Case 3: a question for the remote agent
@@ -64,13 +65,13 @@ Learn: the client transferred to the remote agent again, with the earlier contex
 ## Case 5: the remote agent can be wrong, and the caller cannot see it
 Start the SERVER with the local model (`MODEL_PROVIDER=local`), and the client with Gemini, and repeat cases 3 and 4.
 Expect (from testing): the Europe price was right, but for "the rest of the world" the remote agent answered `$25.50`. The correct
-price is $39. The server log shows no tool call for that request: the local model made up a number instead of using its tool.
+price is $39 (25 + 4 x 3.5), so the remote model did not get it from its tool: it guessed, or called the tool wrongly.
 Learn: the client receives only text. It has no way to check whether the remote agent used its tool or guessed. When you call
 another team's agent, you are trusting it. Return structured data and sources, or verify important values.
 
 ## Case 6: a small client model may not call at all
-Start the SERVER with Gemini and the client with the local model, and repeat case 3 and case 4.
-Expect (from testing, twice): the first question is handed over correctly, but for the follow-up `[shop_assistant]` answered itself,
+Start the client with the local model (`MODEL_PROVIDER=local uv run adk run agent27_a2a`) and repeat cases 3 and 4.
+Expect (from testing, seen twice, once with a local and once with a Gemini server): the first question is handed over correctly, but for the follow-up `[shop_assistant]` answered itself,
 repeating the Europe price ("20.75 dollars") instead of asking the shipping agent about the rest of the world.
 Learn: the same habit as in agent10, agent20 and agent25: a small model copies its own earlier answer. A system is only as reliable
 as the weakest model in the chain.
