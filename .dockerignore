@@ -1,0 +1,11 @@
+# Keep secrets and bulky local files out of any image built from this folder.
+.env
+.env.*
+!.env.example
+.venv
+.git
+.adk
+**/.adk
+*.db
+*.session.json
+__pycache__

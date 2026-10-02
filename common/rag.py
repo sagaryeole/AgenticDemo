@@ -3,6 +3,7 @@
 Chunking is lab 16, embedding is lab 17, cosine scoring is lab 18. The new part is `Index.search`, the retrieval
 rules explained in lab 19 (top-k, minimum score, keyword boost).
 """
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -107,3 +108,79 @@ class Index:
         ]
         hits.sort(key=lambda h: h.score, reverse=True)
         return [h for h in hits[:k] if h.score >= min_score]
+
+
+# --- Lab 35: keyword search (BM25), rank fusion and reranking -------------------------------------------
+
+def bm25_words(text: str) -> list[str]:
+    """Lower-case words as a LIST (repeats count), codes like 'lb-204' kept whole, stop words dropped."""
+    return [w for w in re.findall(r"[a-z0-9][a-z0-9\-]*", text.lower()) if w not in STOPWORDS]
+
+
+class BM25:
+    """Keyword search, the classic way. A chunk scores high when it contains the question's words, and rare words
+    (a form code, a name) count for much more than common ones. No embeddings and no model: just counting.
+
+    score(chunk) = sum over the question's words of  idf(word) * tf * (k1 + 1) / (tf + k1 * (1 - b + b * length / average length))
+    where tf = how often the word appears in the chunk and idf = how rare the word is among all chunks.
+    """
+
+    def __init__(self, chunks: list[str], k1: float = 1.5, b: float = 0.75):
+        self.k1, self.b = k1, b
+        self.docs = [bm25_words(c) for c in chunks]
+        self.avg_len = sum(len(d) for d in self.docs) / len(self.docs)
+        n = len(self.docs)
+        document_frequency: dict[str, int] = {}
+        for doc in self.docs:
+            for word in set(doc):
+                document_frequency[word] = document_frequency.get(word, 0) + 1
+        self.idf = {w: math.log(1 + (n - df + 0.5) / (df + 0.5)) for w, df in document_frequency.items()}
+
+    def scores(self, query: str) -> list[float]:
+        """One score per chunk, in the order of the chunks."""
+        result = []
+        for doc in self.docs:
+            score = 0.0
+            for word in set(bm25_words(query)):
+                tf = doc.count(word)
+                if tf:
+                    norm = tf + self.k1 * (1 - self.b + self.b * len(doc) / self.avg_len)
+                    score += self.idf[word] * tf * (self.k1 + 1) / norm
+            result.append(score)
+        return result
+
+
+def ranking(scores: list[float]) -> list[int]:
+    """Chunk numbers, best score first. Ties keep the original order."""
+    return sorted(range(len(scores)), key=lambda i: -scores[i])
+
+
+def reciprocal_rank_fusion(rankings: list[list[int]], k: int = 60) -> list[int]:
+    """Merge several rankings into one. A chunk earns 1 / (k + position) from each ranking, so one that is near the top
+    in BOTH lists wins. Only positions are used, never the scores, so cosine and BM25 (which have different scales)
+    can be combined without any weight to tune."""
+    total: dict[int, float] = {}
+    for ranked in rankings:
+        for position, chunk_number in enumerate(ranked, start=1):
+            total[chunk_number] = total.get(chunk_number, 0.0) + 1.0 / (k + position)
+    return sorted(total, key=lambda i: -total[i])
+
+
+def llm_rerank(query: str, chunks: list[str]) -> list[int]:
+    """Ask a model to read the question and each candidate chunk together and give every chunk a 0-10 score.
+    Returns the positions (0-based, within `chunks`) best first. Slow and costly compared with vectors, so it is
+    used only on the few candidates the cheap search already found."""
+    from common.llm import ask  # imported here so labs that never rerank do not need a model
+
+    listing = "\n\n".join(f"[{i + 1}] {c}" for i, c in enumerate(chunks))
+    reply = ask(
+        f"Question: {query}\n\nCandidate passages:\n\n{listing}\n\n"
+        "For each passage, give a score from 0 to 10 for how directly it ANSWERS the question "
+        "(10 = contains the answer, 0 = unrelated). Reply with exactly one line per passage, like `1: 7`, and nothing else.",
+        system="You are a strict relevance judge for a search engine.",
+    )
+    scores = [0.0] * len(chunks)
+    for number, score in re.findall(r"(\d+)\s*[:=]\s*(\d+(?:\.\d+)?)", reply.text):
+        if 1 <= int(number) <= len(chunks):
+            scores[int(number) - 1] = float(score)
+    return ranking(scores)

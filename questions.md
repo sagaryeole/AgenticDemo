@@ -150,7 +150,7 @@ wrong: expecting `"J.R.R. Tolkien"` as the argument failed 3 of 3 runs because t
 
 ---
 
-# Part 3: What agents 14-34 showed
+# Part 3: What agents 14-44 showed
 
 Again, each point comes from something that was run in this repo. Many results involve language models, which are not
 deterministic: where a number is quoted it is what happened in testing, and your runs may differ.
@@ -279,6 +279,56 @@ Pause and resume: with `LongRunningFunctionTool` the call stays open, and the ap
 With a database session service, a conversation can be continued by its id in a new program run. State keys have scopes: `user:books` was visible in every
 session of the same user, a key without prefix stayed in its own session, and another user saw nothing. The local model once said "I've noted that as the
 topic" without calling the tool; listing the stored state showed the truth.
+
+## Search needs more than one method (agent35)
+Meaning search (embeddings) and keyword search (BM25) fail in opposite places. On questions phrased in different words from the document, vectors put the right chunk
+first in 5 of 8; BM25 only 3 of 8. On exact terms such as `LB-310` or `Riverside-Guest`, BM25 found 6 of 6 and vectors 5 of 6. Merging the two rankings by their places
+(reciprocal rank fusion) gave 6 of 8, and a model that re-reads the best 5 candidates (a reranker) gave 7 of 8 locally and 8 of 8 on Gemini. The reranker costs one extra
+model call per question, and it can only reorder what the cheaper search already found.
+
+## Measure retrieval and answering separately (agent36)
+A wrong RAG answer has two possible causes. Over 12 questions and three chunking strategies, whole sections found every answer on both models; paragraphs and fixed-size chunks missed
+"How do I join the library?". Gemini then refused to answer; the local model answered from the wrong chunk, a half-true reply that fits the question but not the need. A second kind of failure had the right
+chunk at rank 1 but cut in the middle of a sentence, so "Coding Club" was missing and the model refused. "Grounded" (nothing made up) and "correct" are different scores: one local row was
+grounded 12/12 and correct 11/12.
+
+## Choose the examples, not just the number (agent37)
+Showing the model solved examples (few-shot) teaches rules that are written nowhere else. On 24 school-office messages with quirky house rules, picking the 3 most similar examples with embeddings gave
+22/24 on the local model (no examples 18, the same 3 every time 20, random 3 only 16) and 23/24 on Gemini (21, 23, 22). On the local model random examples were worse than none, and on Gemini all
+methods were within one or two messages. A trivial change to the prompt moved one row by four messages in an earlier run, so single numbers on 24 questions are a direction, not a result.
+
+## Many tools cost tokens on every call (agent38)
+With 20 tools, the first tool was right 24/24 on both models, even for look-alikes. What changed was cost and arguments. Offering only the 4 tools nearest in meaning to the message (a custom toolset whose `get_tools` runs
+before every model call) cut the prompt by about 70 percent (local 3,014 to 802 tokens, Gemini 980 to 284). Replacing every description with "A helper function." did not hurt the choice of tool (the names were clear), but
+the arguments broke: 6 failed tool calls on the local model and 8 on Gemini (`'kilometres'` instead of `'km'`). Offering only 1 or 2 tools made the local model pick a wrong date tool, because the right one was never shown.
+
+## What an answer costs (agent39)
+All four models (flash-lite, flash, pro, local) got all 12 questions right, but Pro wrote 13 times the output tokens of flash-lite (11,346 against 864) and took about 10 times as long, mostly hidden thinking. A router that
+sent only the hard questions to Pro still cost 8.6 times flash-lite's output tokens, because the small model alone was already accurate enough. A cap of 60 or 20 output tokens made Gemini's visible reply EMPTY, since thinking
+tokens count against the cap. Caching the 5,000-token beginning explicitly served 5,219 of about 5,224 input tokens from the cache; Gemini's automatic caching appeared only on the third call. A first run of parts 2-4
+silently used the local model, because the provider was not passed explicitly: when comparing models, name the provider in the code.
+
+## Plan for failure (agent40)
+Three layers: retry for short problems (429), a time limit for calls that hang, and a backup model for problems that last. A `FallbackLlm` wrapper (a subclass of ADK's `BaseLlm`) tried Gemini, and when it failed (a wrong model
+name gave a 404) or timed out, answered with the local model, and the user still got the right fact. A circuit breaker skipped the dead primary for 30 seconds, so the second model call of the same turn did not wait for another failure.
+A tool wrapped in `asyncio.wait_for` returned an error after 3 seconds instead of freezing the chat for 10.
+
+## A secret belongs to the tool, not to the conversation (agent41)
+The toolset added `Authorization: Bearer <token>` to each HTTP request, so the model never saw the token (a check before every model call said `False`). Putting the token in the instruction instead made Gemini simply tell
+the user, and the local model said "I am not allowed to share it" and printed it in the same sentence. With no credential at all, ADK did not send the request: it asked the app for credentials (`adk_request_credential`),
+which `adk run` cannot answer, so the reply was empty.
+
+## A supervisor decides step by step (agent42)
+A supervisor that calls a planner, a writer and a fact checker as tools caught a deliberately wrong "500,000 km" for the Moon (the sheet says 384,400 km) on both models and sent the draft back for one rewrite. The number of rewrites varied
+between runs (0 to 2), which is the difference from a fixed `LoopAgent`. The checker found errors the writer had made because it had a separate source of truth.
+
+## Streaming changes when, not what (agent43)
+With `StreamingMode.SSE` the local model showed its first words after 0.9 s instead of 13 s (217 partial events), while Gemini, whose 4-second reply was already fast, gained a second or two and sent only 5 chunks. Streaming
+does not make the model faster or cheaper. Each partial event holds a piece, and the final event repeats the whole text, so print the partials and store the final.
+
+## An agent is a program you can serve (agent44)
+`adk api_server` exposed the same agent over HTTP with sessions, `/run` (all events) and `/run_sse` (events as they happen), with no change to `agent.py`. A plain `httpx` client was enough. With
+`--session_service_uri sqlite+aiosqlite:///...` a session survived a server restart (4 events kept). The server has no login: it must sit behind your own. The Dockerfile was written but not tested, because no Docker daemon was running.
 
 ---
 
@@ -480,13 +530,78 @@ Start it and return a ticket at once, then report progress on request; or use `L
 **59. Why store sessions in a database?**
 So a conversation can be continued later, from another program run or another server, by its session id. (agent34)
 
+## Search, tools, cost and serving (agents 35-44)
+
+**60. Why use both vector search and keyword search?**
+They fail in opposite places. Vectors understand meaning but can blur a form code or a name; keyword search (BM25) finds exact rare words but knows nothing about meaning. (agent35)
+
+**61. What is reciprocal rank fusion, and why not just add the two scores?**
+Each chunk earns `1 / (60 + place)` from every ranking, so a chunk high in both lists wins. Cosine scores and BM25 scores have different scales, so adding them needs a weight you must tune; places can be combined without one. (agent35)
+
+**62. What can a reranker do that vector search cannot, and what can it not do?**
+It reads the question and a chunk together, so it can tell which candidate really answers. But it only reorders the few candidates it is given: if the right chunk was not found, it cannot rescue it, and it costs a model call per question. (agent35)
+
+**63. Why score retrieval and the answer separately?**
+They fail for different reasons and need different fixes. A question whose right chunk was ranked first still got "I couldn't find that" because the chunk was cut in the middle of a sentence: the fix was in chunking, not in search or the prompt. (agent36)
+
+**64. Can an answer be "grounded" and still wrong?**
+Yes. An answer can be fully supported by the passage it was given and still miss what the user needed, if the wrong passage was retrieved. Grounded means nothing was made up; correct means the user got the answer. (agent36)
+
+**65. How does choosing few-shot examples with embeddings differ from always showing the same ones?**
+The examples most similar to the new message carry the matching rule. In the school-office test it gave 22/24 on the local model against 20 for fixed examples and 18 for none; on Gemini all methods were within two messages. (agent37)
+
+**66. Can examples in a prompt make a model worse?**
+Yes. Three random examples gave the local model 16/24, below the 18/24 it scored with no examples. Examples are evidence the model weighs, and unrelated evidence misleads. (agent37)
+
+**67. Why do many tools cost money even when they are not used?**
+Every tool's name, description and arguments are sent with every model call. With 20 tools that was about 3,000 prompt tokens on the local model and about 1,000 on Gemini, per call. (agent38)
+
+**68. What do vague tool descriptions break?**
+In the test, not the choice of tool (the names were clear) but the arguments: without "units: mm, cm, m, km ..." the models wrote `'kilometres'` and the tool failed 6 to 8 times in 24 questions. (agent38)
+
+**69. How can an ADK agent offer only some of its tools for each message, and what is the risk?**
+A toolset's `get_tools` runs before every model call, so it can pick the tools nearest in meaning to the message. If the right tool is not among those offered, the model cannot call it: with only 1 or 2 tools offered the local model chose a wrong date tool. (agent38)
+
+**70. How do retry, timeout and fallback differ?**
+Retry handles short problems (429, brief outages); a timeout stops a call that hangs; a fallback switches to a backup model when the primary keeps failing. Retrying a service that is really down only makes the user wait. (agent40)
+
+**71. What is a circuit breaker?**
+It remembers that the primary just failed and skips it for a short time, so each following call goes straight to the backup. Without it, every model call in a turn waits for its own failure. (agent40)
+
+**72. Why should every tool have a time limit?**
+A tool that never answers freezes the whole conversation. Wrapped in `asyncio.wait_for`, a stuck tool returned an error after 3 seconds, which the model explained honestly. (agent40)
+
+**73. How should an agent get the secret an API requires, and why is "do not reveal it" in the prompt not enough?**
+The toolset should add it to the HTTP request, outside the model's context. Written in the instruction, the token was repeated by Gemini on request, and the local model refused and revealed it in the same sentence. (agent41)
+
+**74. What does ADK do when a tool needs a login and no credential is configured?**
+It does not send the request. It asks the application for credentials with a special `adk_request_credential` call; `adk run` cannot answer, so the reply is empty. (agent41)
+
+**75. How is a supervisor different from `SequentialAgent`, `LoopAgent` and transfer?**
+The model decides the next step and how many rounds to run, and it keeps control of the conversation (the specialists are called as tools). The others are fixed by you, or hand the conversation over. (agent42)
+
+**76. Why does a separate fact checker catch mistakes the writer made?**
+It has its own source of truth (a fact sheet it looks up), not the same memory that produced the error. The wrong "500,000 km" was corrected to 384,400 km. (agent42)
+
+**77. What does streaming change?**
+How soon the user sees the first words, not the total time, the cost or the quality. On the local model the first text came after 0.9 s instead of 13 s. The partial events hold pieces; the final event repeats the whole text. (agent43)
+
+**78. What does `adk api_server` give you, and what must you add?**
+Sessions, `/run` and `/run_sse` as HTTP endpoints, with no change to the agent. It has no login, so put your own authentication in front of it, and use `--session_service_uri` to keep sessions across restarts. (agent44)
+
+**79. Which two ways cut the cost of an agent that sends the same long text every time?**
+Context caching (an explicit cache served 5,219 of about 5,224 input tokens from the cache, about 1.5 to 2 seconds per call) and a shorter prompt. Only the unchanged beginning can be cached. (agent39)
+
+**80. Why not trust one measurement on 24 questions?**
+Results move with small changes: adding one line of system instruction changed one local row by four messages, and the same lab on two models differed by one or two messages. Treat small differences as noise and look at what is stable across runs and models. (agent37, agent39)
+
 ## Putting it together
 
-**60. How do you stop an agent from making things up when the data is missing?**
+**81. How do you stop an agent from making things up when the data is missing?**
 Ground it: answer only from tool or retrieved data, return the needed fields from your tools, say "I couldn't find that" when nothing matches, and label any guess as a guess. No method removes made-up answers completely; the aim is to make the line between fact and guess visible. (agent12, agent20, `triage_agent`)
 
-**61. How do you know your agent still works after you change the prompt or the model?**
+**82. How do you know your agent still works after you change the prompt or the model?**
 Run an eval set with both a tool-call check and an answer check on every change, and add a new case for every bug you find. (agent13, agent20, agent25)
 
-**62. What changes when you switch to a small local model?**
+**83. What changes when you switch to a small local model?**
 It is slower and less reliable at counting, at calling a tool again in later turns, and at strict judgement. Keep each decision small and move checkable rules into code. (agent10, agent20, agent25, agent27)

@@ -17,15 +17,16 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=False)
 PROVIDERS = ("local", "gemini")
 
 
-def get_model(agent_name: str | None = None):
+def get_model(agent_name: str | None = None, provider: str | None = None):
     """Return the model for an agent, based on environment variables.
 
     Args:
         agent_name: e.g. "agent07". If AGENT07_MODEL_PROVIDER is set it wins
             over the global MODEL_PROVIDER.
+        provider: "gemini" or "local" to ask for one provider directly, ignoring the environment
+            (agent40 builds a primary and a backup model this way).
     """
-    provider = None
-    if agent_name:
+    if agent_name and not provider:
         provider = os.environ.get(f"{agent_name.upper()}_MODEL_PROVIDER")
     provider = (provider or os.environ.get("MODEL_PROVIDER", "gemini")).lower()
 
