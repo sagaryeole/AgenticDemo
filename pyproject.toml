@@ -27,3 +27,9 @@ dependencies = [
     "rouge-score>=0.1.2",
     "tabulate>=0.10.0",
 ]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

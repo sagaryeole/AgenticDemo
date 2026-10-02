@@ -6,6 +6,38 @@ is a capstone that combines the main ideas in one agent.
 [questions.md](questions.md) is the study guide: 12 topic modules with diagrams, charts of the measured results, the main lessons,
 and 100 questions (with hidden answers) to check your understanding.
 
+![adk web showing agent07: the coordinator hands off to the weather agent, which calls its tool; the Traces tab shows the timing](docs/adk-web-trace.gif)
+
+*`uv run adk web` on agent07: the hand-off, the tool call, and the timing of each step (a local model through LM Studio).*
+
+## Learning tracks
+
+New to ADK? Go in order. Looking for one topic? Pick a track. Each link opens that agent's `CASES.md`.
+
+### 🟢 Core fundamentals
+
+Instructions, tools, local models, state, structured output, memory, code execution, images and prompt building.
+
+[01](agent01_poet/CASES.md) · [02](agent02_toolcall/CASES.md) · [03](agent03_localmodel/CASES.md) · [04](agent04_localmodelwithtool/CASES.md) · [05](agent05_state/CASES.md) · [06](agent06_structured/CASES.md) · [21](agent21_memory/CASES.md) · [22](agent22_code_execution/CASES.md) · [23](agent23_artifacts/CASES.md) · [28](agent28_multimodal/CASES.md) · [29](agent29_dynamic_instructions/CASES.md) · [30](agent30_long_conversations/CASES.md) · [45](agent45_data_analyst/CASES.md)
+
+### 🟡 Orchestration & workflows
+
+Several agents working together: coordinators, pipelines, loops, graphs, A2A, planning and long jobs.
+
+[07](agent07_multiagent/CASES.md) · [08](agent08_workflow/CASES.md) · [09](agent09_parallel/CASES.md) · [10](agent10_loop/CASES.md) · [14](agent14_agent_as_tool/CASES.md) · [24](agent24_planning/CASES.md) · [27](agent27_a2a/CASES.md) · [33](agent33_long_running/CASES.md) · [42](agent42_supervisor_critic/CASES.md) · [46](agent46_graph_workflow/CASES.md) · [47](agent47_batch_processing/CASES.md)
+
+### 🔵 RAG & search
+
+Chunking, embeddings, similarity, retrieval, hybrid search and reranking, and how to measure a RAG pipeline.
+
+[16](agent16_chunking/CASES.md) · [17](agent17_embeddings/CASES.md) · [18](agent18_cosine/CASES.md) · [19](agent19_retrieval/CASES.md) · [20](agent20_rag/CASES.md) · [35](agent35_hybrid_rerank/CASES.md) · [36](agent36_rag_eval/CASES.md) · [37](agent37_fewshot_selection/CASES.md)
+
+### 🔴 Tools, evals, safety & production
+
+Guardrails, MCP and OpenAPI tools, evals, observability, security, cost, resilience, serving, and the capstone.
+
+[11](agent11_guardrails/CASES.md) · [12](agent12_mcp/CASES.md) · [13](agent13_evals/CASES.md) · [15](agent15_confirmation/CASES.md) · [25](agent25_multiturn_evals/CASES.md) · [26](agent26_observability/CASES.md) · [31](agent31_prompt_injection/CASES.md) · [32](agent32_openapi_tools/CASES.md) · [34](agent34_persistent_sessions/CASES.md) · [38](agent38_many_tools/CASES.md) · [39](agent39_cost_speed/CASES.md) · [40](agent40_fallback_timeouts/CASES.md) · [41](agent41_tool_auth/CASES.md) · [43](agent43_streaming/CASES.md) · [44](agent44_serving/CASES.md) · [48](agent48_permissions/CASES.md) · [49](agent49_distillation/CASES.md) · [50](agent50_capstone/CASES.md)
+
 ## The agents
 
 | # | Folder | New idea | Model |
